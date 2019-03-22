@@ -44,6 +44,7 @@
 enum {
 	T_ARCHITECTURE = 0,
 	T_BACKUP_FILES,
+	T_OVERWRITE_FILES,
 	T_BUILD_DATE,
 	T_COMPRESSED_SIZE,
 	T_CONFLICTS_WITH,
@@ -98,6 +99,7 @@ static void make_aligned_titles(void)
 	char *buf[ARRAYSIZE(wbuf)];
 	buf[T_ARCHITECTURE] = _("Architecture");
 	buf[T_BACKUP_FILES] = _("Backup Files");
+	buf[T_OVERWRITE_FILES] = _("Overwrite");
 	buf[T_BUILD_DATE] = _("Build Date");
 	buf[T_COMPRESSED_SIZE] = _("Compressed Size");
 	buf[T_CONFLICTS_WITH] = _("Conflicts With");
@@ -420,6 +422,31 @@ void dump_pkg_backups(alpm_pkg_t *pkg)
 		}
 	} else {
 		/* package had no backup files */
+		printf(_("(none)\n"));
+	}
+}
+
+/* Display list of files to be overwritten and their modification states
+ */
+void dump_pkg_backups(alpm_pkg_t *pkg)
+{
+	alpm_list_t *i;
+	const char *root = alpm_option_get_root(config->handle);
+	printf("%s%s\n%s", config->colstr.title, titles[T_OVERWRITE_FILES],
+				 config->colstr.nocolor);
+	if(alpm_pkg_get_overwrite(pkg)) {
+		/* package has overwrite files, so print them */
+		for(i = alpm_pkg_get_overwrite(pkg); i; i = alpm_list_next(i)) {
+			const alpm_overwrite_t *overwrite = i->data;
+			const char *value;
+			if(!overwrite->hash) {
+				continue;
+			}
+			value = get_overwrite_file_status(root, overwrite);
+			printf("%s\t%s%s\n", value, root, overwrite->name);
+		}
+	} else {
+		/* package had no files to be overwritten */
 		printf(_("(none)\n"));
 	}
 }
